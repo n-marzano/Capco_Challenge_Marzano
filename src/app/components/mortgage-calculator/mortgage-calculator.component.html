@@ -1,0 +1,157 @@
+<div class="container">
+  <form class="form" [formGroup]="mortgageFormGroup" (ngSubmit)="calculateMonthlyRepayment()" novalidate>
+    <h2>Mortgage Calculator</h2>
+
+    <div class="form-group">
+      <label for="amount">Mortgage Amount (€)</label>
+      <input
+        id="amount"
+        type="number"
+        formControlName="amount"
+        placeholder="ex. 200000"
+        aria-required="true"
+        [attr.aria-invalid]="mortgageFormGroup.controls.amount.invalid && mortgageFormGroup.controls.amount.touched"
+        [attr.aria-describedby]="mortgageFormGroup.controls.amount.invalid && mortgageFormGroup.controls.amount.touched ? 'amount-error' : null"
+      />
+      <small
+        id="amount-error"
+        role="alert"
+        *ngIf="mortgageFormGroup.controls.amount.invalid && mortgageFormGroup.controls.amount.touched"
+      >
+        Enter a valid mortgage amount (at least 1).
+      </small>
+    </div>
+
+    <div class="form-group">
+      <label for="interestRate">Interest Rate (%)</label>
+      <input
+        id="interestRate"
+        type="number"
+        step="0.01"
+        formControlName="interestRate"
+        placeholder="ex. 3.5"
+        aria-required="true"
+        [attr.aria-invalid]="mortgageFormGroup.controls.interestRate.invalid && mortgageFormGroup.controls.interestRate.touched"
+        [attr.aria-describedby]="mortgageFormGroup.controls.interestRate.invalid && mortgageFormGroup.controls.interestRate.touched ? 'rate-error' : null"
+      />
+      <small
+        id="rate-error"
+        role="alert"
+        *ngIf="mortgageFormGroup.controls.interestRate.invalid && mortgageFormGroup.controls.interestRate.touched"
+      >
+        Enter a valid interest rate (0 or higher).
+      </small>
+    </div>
+
+    <div class="form-group">
+      <label for="duration">Duration (years)</label>
+      <input
+        id="duration"
+        type="number"
+        formControlName="duration"
+        placeholder="ex. 25"
+        aria-required="true"
+        [attr.aria-invalid]="mortgageFormGroup.controls.duration.invalid && mortgageFormGroup.controls.duration.touched"
+        [attr.aria-describedby]="mortgageFormGroup.controls.duration.invalid && mortgageFormGroup.controls.duration.touched ? 'duration-error' : null"
+      />
+      <small
+        id="duration-error"
+        role="alert"
+        *ngIf="mortgageFormGroup.controls.duration.invalid && mortgageFormGroup.controls.duration.touched"
+      >
+        Enter a valid duration in years (at least 1).
+      </small>
+    </div>
+
+    <div class="form-group">
+      <label for="installments">Total Number of Installments</label>
+      <input
+        id="installments"
+        type="number"
+        formControlName="installments"
+        placeholder="ex. 300"
+        aria-required="true"
+        [attr.aria-invalid]="mortgageFormGroup.controls.installments.invalid && mortgageFormGroup.controls.installments.touched"
+        [attr.aria-describedby]="mortgageFormGroup.controls.installments.invalid && mortgageFormGroup.controls.installments.touched ? 'installments-error' : null"
+      />
+      <small
+        id="installments-error"
+        role="alert"
+        *ngIf="mortgageFormGroup.controls.installments.invalid && mortgageFormGroup.controls.installments.touched"
+      >
+        Enter a valid total number of installments (at least 1).
+      </small>
+    </div>
+
+    <fieldset role="radiogroup" aria-required="true">
+      <legend>Rate Flag</legend>
+      <label>
+        <input type="radio" formControlName="rateFlag" value="F" />
+        Fixed
+      </label>
+      <label>
+        <input type="radio" formControlName="rateFlag" value="V" />
+        Variable
+      </label>
+    </fieldset>
+
+    <button
+      class="btn-calculate"
+      type="submit"
+      [disabled]="mortgageFormGroup.invalid"
+      [attr.aria-disabled]="mortgageFormGroup.invalid"
+    >
+      Calculate
+    </button>
+  </form>
+
+  <div class="result-card" *ngIf="monthlyRepayment" aria-live="polite">
+    <h3>Estimated Installment</h3>
+    <p class="amount">{{ monthlyRepayment | currency:'EUR' }}</p>
+  </div>
+
+  <div *ngIf="compared.length > 0">
+    <h3>Comparison</h3>
+    <table border="1" cellpadding="6">
+      <tr>
+        <th>Field</th>
+        <th *ngFor="let item of compared">{{ item.rateFlag === 'F' ? 'Fixed' : 'Variable' }}</th>
+      </tr>
+      <tr>
+        <td>Installment</td>
+        <td *ngFor="let item of compared">{{ item.monthlyRepayment | currency:'EUR' }}</td>
+      </tr>
+      <tr>
+        <td>Amount</td>
+        <td *ngFor="let item of compared">{{ item.amount | currency:'EUR' }}</td>
+      </tr>
+      <tr>
+        <td>Applied Rate</td>
+        <td *ngFor="let item of compared">{{ item.appliedRate }}%</td>
+      </tr>
+      <tr>
+        <td>Duration / Installments</td>
+        <td *ngFor="let item of compared">{{ item.duration }}y / {{ item.installments }}</td>
+      </tr>
+    </table>
+  </div>
+
+  <div *ngIf="history.length > 0">
+    <h3>History</h3>
+    <button type="button" (click)="clearHistory()">Clear</button>
+    <ul>
+      <li *ngFor="let item of history">
+        {{ item.monthlyRepayment | currency:'EUR' }} —
+        {{ item.rateFlag === 'F' ? 'Fixed' : 'Variable' }} ({{ item.appliedRate }}%) —
+        {{ item.amount | currency:'EUR' }}, {{ item.duration }}y, {{ item.installments }} inst.
+        <button
+          type="button"
+          (click)="toggleCompare(item)"
+          [attr.aria-pressed]="isCompared(item.id)"
+        >
+          {{ isCompared(item.id) ? 'Remove' : 'Compare' }}
+        </button>
+      </li>
+    </ul>
+  </div>
+</div>
